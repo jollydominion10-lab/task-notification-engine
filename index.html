@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Task Engine & Webhook Notifications</title>
+  <title>Task Engine & Live Countdown Timer</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -11,47 +11,141 @@
       --card-bg: #111827;
       --border: rgba(255, 255, 255, 0.08);
       --accent: #38bdf8;
+      --accent-hover: #0284c7;
       --text: #f9fafb;
       --muted: #9ca3af;
       --danger: #ef4444;
       --success: #10b981;
+      --warning: #f59e0b;
     }
 
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg);
       color: var(--text);
-      padding: 30px;
-      margin: 0;
+      padding: 24px;
+      margin: 0 auto;
+      max-width: 1000px;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       border-bottom: 1px solid var(--border);
       padding-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
-    h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
+    h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0; }
+
+    .btn-primary {
+      background-color: var(--accent);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover { background-color: var(--accent-hover); color: #fff; }
+
+    /* Modal / Form Styles */
+    .form-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; }
+    
+    input, textarea, select {
+      width: 100%;
+      background: #0b0f19;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #fff;
+      font-family: inherit;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
     }
 
     .card {
       background-color: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
     }
 
     .task-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .task-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; }
     
+    .timer-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .timer-badge.overdue {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0b0f19;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action.edit:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-action.delete:hover { border-color: var(--danger); color: var(--danger); }
+
     .tag {
       display: inline-block;
       padding: 4px 10px;
@@ -62,7 +156,8 @@
     }
     
     .high { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-    .medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .low { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
     
     .status-pending { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
     .status-notified { background: rgba(16, 185, 129, 0.15); color: var(--success); }
@@ -72,21 +167,53 @@
 
   <div class="header">
     <div>
-      <h1>⏱️ Task Engine & Webhook Service</h1>
-      <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 14px;">Automated Deadline Monitoring & Notifications</p>
+      <h1>⏱️ Task Engine & Live Countdown</h1>
+      <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 13px;">Automated Deadline Monitoring & Task Manager</p>
     </div>
+    <button class="btn-primary" id="toggle-form-btn">+ Schedule Task</button>
   </div>
 
-  <h3 style="margin-bottom: 15px; color: var(--accent);">📌 Scheduled Tasks Stream</h3>
+  <!-- Create / Edit Form -->
+  <div class="form-card" id="task-form-container">
+    <h3 id="form-title" style="margin-top:0; margin-bottom: 16px; font-size: 16px;">📌 Schedule New Task</h3>
+    <form id="task-form">
+      <input type="hidden" id="edit-task-id" value="">
+      <div class="form-group">
+        <label>Task Title</label>
+        <input type="text" id="task-title" placeholder="e.g., Code Review" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="task-desc" rows="2" placeholder="Brief details..." required></textarea>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <div class="form-group" style="flex: 1;">
+          <label>Priority</label>
+          <select id="task-priority">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex: 1;">
+          <label>Due In (Minutes)</label>
+          <input type="number" id="task-due-min" min="1" value="5" required>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary" style="width: 100%; margin-top: 6px;" id="save-btn">Save Task to Cloud</button>
+    </form>
+  </div>
+
+  <h3 style="margin-bottom: 15px; color: var(--accent); font-size: 16px;">📌 Scheduled Tasks Stream</h3>
   <div class="grid" id="tasks-container">
     <div class="card"><p style="color: var(--muted);">Loading task records from cloud...</p></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // ⚠️ REPLACE WITH YOUR FIREBASE WEB KEYS
+    // ⚠️ PASTE YOUR FIREBASE WEB CONFIG KEYS HERE
     const firebaseConfig = {
   apiKey: "AIzaSyClsTTTpCXFm-bMiEtw87v0MBRzjN-jbsU",
   authDomain: "trendapp-5a8e4.firebaseapp.com",
@@ -101,27 +228,157 @@
     const db = getFirestore(app);
 
     const container = document.getElementById('tasks-container');
+    const formContainer = document.getElementById('task-form-container');
+    const toggleBtn = document.getElementById('toggle-form-btn');
+    const form = document.getElementById('task-form');
+    const editTaskId = document.getElementById('edit-task-id');
+    const formTitle = document.getElementById('form-title');
+    const saveBtn = document.getElementById('save-btn');
 
+    let tasksCache = [];
+
+    // Toggle Form
+    toggleBtn.addEventListener('click', () => {
+      resetForm();
+      const isVisible = formContainer.style.display === 'block';
+      formContainer.style.display = isVisible ? 'none' : 'block';
+      toggleBtn.innerText = isVisible ? '+ Schedule Task' : '✕ Close Form';
+    });
+
+    function resetForm() {
+      form.reset();
+      editTaskId.value = "";
+      formTitle.innerText = "📌 Schedule New Task";
+      saveBtn.innerText = "Save Task to Cloud";
+    }
+
+    // Save (Add or Edit) Task
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('task-title').value;
+      const description = document.getElementById('task-desc').value;
+      const priority = document.getElementById('task-priority').value;
+      const dueMinutes = parseInt(document.getElementById('task-due-min').value) || 5;
+
+      const dueTime = new Date(Date.now() + dueMinutes * 60000);
+      const now = new Date();
+
+      const taskPayload = {
+        title: title,
+        description: description,
+        priority: priority,
+        status: "Pending",
+        due_at: dueTime.toISOString().replace('T', ' ').substring(0, 19),
+        due_timestamp: Math.floor(dueTime.getTime() / 1000)
+      };
+
+      try {
+        if (editTaskId.value) {
+          // Update Existing Task
+          await updateDoc(doc(db, "tasks", editTaskId.value), taskPayload);
+        } else {
+          // Create New Task
+          taskPayload.created_at = now.toISOString().replace('T', ' ').substring(0, 19);
+          await addDoc(collection(db, "tasks"), taskPayload);
+        }
+
+        resetForm();
+        formContainer.style.display = 'none';
+        toggleBtn.innerText = '+ Schedule Task';
+      } catch (error) {
+        alert("Error saving task: " + error.message);
+      }
+    });
+
+    // Delete Task Function
+    window.deleteTask = async (id) => {
+      if (confirm("Are you sure you want to remove this schedule?")) {
+        try {
+          await deleteDoc(doc(db, "tasks", id));
+        } catch (err) {
+          alert("Error deleting task: " + err.message);
+        }
+      }
+    };
+
+    // Open Edit Task Form
+    window.editTask = (id) => {
+      const task = tasksCache.find(t => t.id === id);
+      if (!task) return;
+
+      editTaskId.value = id;
+      document.getElementById('task-title').value = task.title || '';
+      document.getElementById('task-desc').value = task.description || '';
+      document.getElementById('task-priority').value = task.priority || 'Medium';
+      
+      formTitle.innerText = "✏️ Edit Scheduled Task";
+      saveBtn.innerText = "Update Task";
+      formContainer.style.display = 'block';
+      toggleBtn.innerText = '✕ Close Form';
+    };
+
+    // Ticking Countdown Timer Logic
+    function updateTimers() {
+      const now = Math.floor(Date.now() / 1000);
+      tasksCache.forEach(task => {
+        const timerEl = document.getElementById(`timer-${task.id}`);
+        if (!timerEl) return;
+
+        const diff = task.due_timestamp - now;
+        if (diff <= 0) {
+          timerEl.className = "timer-badge overdue";
+          timerEl.innerHTML = "⏳ Deadline Expired / Triggered";
+        } else {
+          const mins = Math.floor(diff / 60);
+          const secs = diff % 60;
+          timerEl.className = "timer-badge";
+          timerEl.innerHTML = `⏱️ Time Left: ${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+        }
+      });
+    }
+
+    setInterval(updateTimers, 1000);
+
+    // Real-time Firestore Stream
     onSnapshot(collection(db, "tasks"), (snapshot) => {
       container.innerHTML = "";
+      tasksCache = [];
 
-      snapshot.forEach((doc) => {
-        const task = doc.data();
+      if (snapshot.empty) {
+        container.innerHTML = `<div class="card"><p style="color: var(--muted);">No active tasks scheduled.</p></div>`;
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const task = docSnap.data();
+        task.id = docSnap.id;
+        tasksCache.push(task);
+
         const priorityClass = (task.priority || 'Medium').toLowerCase();
         const statusClass = (task.status || 'Pending').toLowerCase() === 'notified' ? 'status-notified' : 'status-pending';
 
         container.innerHTML += `
           <div class="card">
-            <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
-              <span class="tag ${priorityClass}">${task.priority || 'Medium'} Priority</span>
-              <span class="tag ${statusClass}">${task.status || 'Pending'}</span>
+            <div>
+              <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+                <span class="tag ${priorityClass}">${task.priority || 'Medium'}</span>
+                <span class="tag ${statusClass}">${task.status || 'Pending'}</span>
+              </div>
+              <div class="task-title">${task.title || 'Untitled Task'}</div>
+              <div class="task-desc">${task.description || 'No details.'}</div>
+              <div class="timer-badge" id="timer-${task.id}">⏱️ Calculating time...</div>
             </div>
-            <div class="task-title">${task.title || 'Untitled Task'}</div>
-            <div class="task-desc">${task.description || 'No details.'}</div>
-            <div style="font-size: 12px; color: var(--muted);">⏰ Due: <strong>${task.due_at || 'N/A'}</strong></div>
+            
+            <div class="card-actions">
+              <button class="btn-action edit" onclick="editTask('${task.id}')">✏️ Edit</button>
+              <button class="btn-action delete" onclick="deleteTask('${task.id}')">🗑️ Remove</button>
+            </div>
           </div>
         `;
       });
+
+      updateTimers();
     });
   </script>
 
