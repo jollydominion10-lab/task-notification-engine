@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Engine & Webhook Notifications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card-bg: #111827;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #38bdf8;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --danger: #ef4444;
+      --success: #10b981;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 30px;
+      margin: 0;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+    }
+
+    h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .task-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .task-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; }
+    
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    
+    .high { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    
+    .status-pending { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+    .status-notified { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>⏱️ Task Engine & Webhook Service</h1>
+      <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 14px;">Automated Deadline Monitoring & Notifications</p>
+    </div>
+  </div>
+
+  <h3 style="margin-bottom: 15px; color: var(--accent);">📌 Scheduled Tasks Stream</h3>
+  <div class="grid" id="tasks-container">
+    <div class="card"><p style="color: var(--muted);">Loading task records from cloud...</p></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ⚠️ REPLACE WITH YOUR FIREBASE WEB KEYS
+    const firebaseConfig = {
+  apiKey: "AIzaSyClsTTTpCXFm-bMiEtw87v0MBRzjN-jbsU",
+  authDomain: "trendapp-5a8e4.firebaseapp.com",
+  projectId: "trendapp-5a8e4",
+  storageBucket: "trendapp-5a8e4.firebasestorage.app",
+  messagingSenderId: "11393108222",
+  appId: "1:11393108222:web:001e38589ebac50000fdaf",
+  measurementId: "G-MM0V8N6PQK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const container = document.getElementById('tasks-container');
+
+    onSnapshot(collection(db, "tasks"), (snapshot) => {
+      container.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const task = doc.data();
+        const priorityClass = (task.priority || 'Medium').toLowerCase();
+        const statusClass = (task.status || 'Pending').toLowerCase() === 'notified' ? 'status-notified' : 'status-pending';
+
+        container.innerHTML += `
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
+              <span class="tag ${priorityClass}">${task.priority || 'Medium'} Priority</span>
+              <span class="tag ${statusClass}">${task.status || 'Pending'}</span>
+            </div>
+            <div class="task-title">${task.title || 'Untitled Task'}</div>
+            <div class="task-desc">${task.description || 'No details.'}</div>
+            <div style="font-size: 12px; color: var(--muted);">⏰ Due: <strong>${task.due_at || 'N/A'}</strong></div>
+          </div>
+        `;
+      });
+    });
+  </script>
+
+</body>
+</html>
