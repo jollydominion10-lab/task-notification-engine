@@ -32,7 +32,7 @@
                         radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.15) 0%, transparent 40%);
     }
 
-    /* WELCOME ONBOARDING SCREEN STYLES */
+    /* WELCOME ONBOARDING SCREEN */
     #welcome-screen {
       display: flex;
       flex-direction: column;
@@ -105,18 +105,8 @@
       padding: 16px;
     }
 
-    .feature-card h4 {
-      margin: 0 0 6px 0;
-      color: #fff;
-      font-size: 14px;
-    }
-
-    .feature-card p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 12.5px;
-      line-height: 1.4;
-    }
+    .feature-card h4 { margin: 0 0 6px 0; color: #fff; font-size: 14px; }
+    .feature-card p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
 
     .btn-launch {
       background: var(--accent-gradient);
@@ -132,12 +122,9 @@
       box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
     }
 
-    .btn-launch:hover {
-      opacity: 0.95;
-      transform: translateY(-2px);
-    }
+    .btn-launch:hover { opacity: 0.95; transform: translateY(-2px); }
 
-    /* MAIN DASHBOARD STYLES */
+    /* DASHBOARD STYLES */
     #dashboard-screen {
       display: none;
       padding: 24px;
@@ -173,7 +160,7 @@
 
     .btn-primary:hover { opacity: 0.9; }
 
-    /* STATS & PROGRESS TRACKER BAR */
+    /* STATS & PROGRESS TRACKER */
     .progress-section {
       background: rgba(30, 41, 59, 0.8);
       backdrop-filter: blur(10px);
@@ -229,7 +216,7 @@
     .metric-number { font-size: 20px; font-weight: 800; color: #fff; }
     .metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
 
-    /* FORM & GRID STYLES */
+    /* TASK CARDS & GRID */
     .form-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border);
@@ -311,6 +298,13 @@
       color: var(--danger);
       border-color: rgba(244, 63, 94, 0.3);
       background: rgba(244, 63, 94, 0.1);
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
 
     .timer-badge.completed-badge {
@@ -353,9 +347,63 @@
     
     .status-pending { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
     .status-completed { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); }
+
+    /* ALERT MODAL POPUP */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: var(--card-bg);
+      border: 2px solid var(--danger);
+      border-radius: 20px;
+      padding: 28px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(244, 63, 94, 0.4);
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon { font-size: 48px; margin-bottom: 12px; }
+    .modal-title { font-size: 22px; font-weight: 800; color: var(--danger); margin-bottom: 8px; }
+    .modal-text { font-size: 14px; color: var(--text); margin-bottom: 20px; line-height: 1.5; }
+    
+    .btn-dismiss {
+      background: var(--danger);
+      color: #fff;
+      font-weight: 800;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
+
+  <div class="modal-overlay" id="alert-modal">
+    <div class="modal-box">
+      <div class="modal-icon">🚨</div>
+      <div class="modal-title">Deadline Triggered!</div>
+      <div class="modal-text" id="modal-task-text">A scheduled task deadline has expired!</div>
+      <button class="btn-dismiss" id="dismiss-modal-btn">Acknowledge Alert 🔕</button>
+    </div>
+  </div>
 
   <div id="welcome-screen">
     <div class="badge">⚡ Microservice Architecture Project</div>
@@ -372,8 +420,8 @@
 
       <div class="features-grid">
         <div class="feature-card">
-          <h4>⏱️ Live Countdowns & Stats</h4>
-          <p>Real-time completion tracking with ticking deadline countdowns.</p>
+          <h4>⏱️ Live Countdowns & Alerts</h4>
+          <p>Real-time completion tracking with audio alarms and pop-up notifications.</p>
         </div>
         <div class="feature-card">
           <h4>🐍 Background Engine</h4>
@@ -500,7 +548,72 @@
     const formTitle = document.getElementById('form-title');
     const saveBtn = document.getElementById('save-btn');
 
+    const alertModal = document.getElementById('alert-modal');
+    const modalTaskText = document.getElementById('modal-task-text');
+    const dismissModalBtn = document.getElementById('dismiss-modal-btn');
+
     let tasksCache = [];
+    let alertedTasks = new Set(); // Tracks tasks that already fired an alarm
+
+    // Request Notification Permissions
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+
+    // Web Audio Synthesizer Alarm Sound
+    function playAlarmSound() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+
+        // 3-Tone Escalation Sound
+        const tones = [523.25, 659.25, 783.99]; // C5, E5, G5
+        tones.forEach((freq, index) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + index * 0.15);
+          
+          gain.gain.setValueAtTime(0.3, ctx.currentTime + index * 0.15);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + index * 0.15 + 0.3);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          osc.start(ctx.currentTime + index * 0.15);
+          osc.stop(ctx.currentTime + index * 0.15 + 0.35);
+        });
+      } catch (err) {
+        console.log("Audio play blocked until user interaction", err);
+      }
+    }
+
+    // Trigger Alarm & Pop-Up Notifications
+    function triggerDeadlineAlert(task) {
+      if (alertedTasks.has(task.id)) return; // Prevent repeated alarms
+      alertedTasks.add(task.id);
+
+      // 1. Audio Alarm Sound
+      playAlarmSound();
+
+      // 2. Browser Pop-up Notification
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification("🚨 TASK DEADLINE EXPIRED!", {
+          body: `Task: ${task.title}\nDetails: ${task.description || 'Deadline triggered.'}`,
+          icon: "https://cdn-icons-png.flaticon.com/512/3602/3602123.png"
+        });
+      }
+
+      // 3. In-App Pop-up Modal
+      modalTaskText.innerHTML = `Task: <strong>${task.title}</strong> has hit its scheduled deadline!`;
+      alertModal.style.display = "flex";
+    }
+
+    dismissModalBtn.addEventListener('click', () => {
+      alertModal.style.display = "none";
+    });
 
     // Onboarding Form Handler
     onboardingForm.addEventListener('submit', (e) => {
@@ -534,9 +647,9 @@
     // Load Sample Workflow Data
     window.loadSampleData = async () => {
       const samples = [
-        { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", dueMinutes: 2 },
-        { title: "Optimize Firestore Indexes", description: "Add composite index for task querying", priority: "Medium", dueMinutes: 10 },
-        { title: "Deploy Webhook Microservice", description: "Push container build to production environment", priority: "Low", dueMinutes: 25 }
+        { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", dueMinutes: 1 },
+        { title: "Optimize Firestore Indexes", description: "Add composite index for task querying", priority: "Medium", dueMinutes: 5 },
+        { title: "Deploy Webhook Microservice", description: "Push container build to production environment", priority: "Low", dueMinutes: 15 }
       ];
 
       for (const item of samples) {
@@ -628,7 +741,7 @@
       toggleBtn.innerText = '✕ Close Form';
     };
 
-    // Calculate Progress & Update Progress Bar Metrics
+    // Calculate Progress & Update Metrics
     function updateProgressMetrics() {
       const total = tasksCache.length;
       if (total === 0) {
@@ -673,6 +786,10 @@
         if (diff <= 0) {
           timerEl.className = "timer-badge overdue";
           timerEl.innerHTML = "🚨 <strong>CRITICAL OVERDUE:</strong> Deadline Triggered!";
+          
+          // Trigger Alarm & Pop-Up if not already alerted
+          triggerDeadlineAlert(task);
+
         } else if (diff <= 180) {
           const mins = Math.floor(diff / 60);
           const secs = diff % 60;
