@@ -206,6 +206,15 @@
       justify-content: space-between;
     }
 
+    .empty-state-card {
+      grid-column: 1 / -1;
+      background: var(--card-bg);
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
     .task-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
     .task-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; }
     
@@ -221,6 +230,12 @@
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .timer-badge.urgent {
+      color: var(--warning);
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.1);
     }
 
     .timer-badge.overdue {
@@ -266,18 +281,17 @@
 </head>
 <body>
 
-  <!-- WELCOME ONBOARDING SCREEN -->
   <div id="welcome-screen">
     <div class="badge">⚡ Microservice Architecture Project</div>
     <h1 class="hero-title">Welcome to Task Notification Engine</h1>
     <p class="hero-subtitle">
-      An automated deadline monitoring system powered by a Python background polling engine, Cloud Firestore real-time database, and dynamic webhook alerts.
+      An automated deadline monitoring system powered by a Python background engine, Cloud Firestore database, and dynamic webhook alerts.
     </p>
 
     <div class="welcome-card">
       <h3 style="margin-top:0; color:#fff; font-size: 16px;">💡 About This Application</h3>
       <p style="color: var(--muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
-        This platform manages scheduled deadlines in real-time. When tasks are created or updated, they are synced instantly across cloud nodes. Background scripts continuously audit active schedules and trigger webhook notifications when deadlines expire.
+        This platform manages scheduled deadlines in real-time. When tasks are created or updated, they are synced instantly across cloud nodes. Background scripts audit active schedules and trigger webhook notifications when deadlines expire.
       </p>
 
       <div class="features-grid">
@@ -293,15 +307,14 @@
 
       <form id="onboarding-form">
         <div class="form-group" style="margin-bottom: 16px;">
-          <label>Your Name / Portfolio Visitor ID</label>
-          <input type="text" id="visitor-name" placeholder="e.g., Alex / Reviewer" required>
+          <label>Your Name / Portfolio Reviewer ID</label>
+          <input type="text" id="visitor-name" placeholder="e.g., Recruiter / Engineering Lead" required>
         </div>
         <button type="submit" class="btn-launch">Access Dashboard →</button>
       </form>
     </div>
   </div>
 
-  <!-- MAIN DASHBOARD SCREEN -->
   <div id="dashboard-screen">
     <div class="header">
       <div>
@@ -314,7 +327,6 @@
       </div>
     </div>
 
-    <!-- Create / Edit Task Form -->
     <div class="form-card" id="task-form-container">
       <h3 id="form-title" style="margin-top:0; margin-bottom: 16px; font-size: 16px;">📌 Schedule New Task</h3>
       <form id="task-form">
@@ -386,7 +398,7 @@
 
     let tasksCache = [];
 
-    // Onboarding Form Submit
+    // Onboarding Form Handler
     onboardingForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const visitorName = visitorInput.value.trim() || 'Guest';
@@ -401,7 +413,7 @@
       welcomeScreen.style.display = 'flex';
     });
 
-    // Toggle Form
+    // Toggle Form Visibility
     toggleBtn.addEventListener('click', () => {
       resetForm();
       const isVisible = formContainer.style.display === 'block';
@@ -416,7 +428,30 @@
       saveBtn.innerText = "Save Task to Cloud";
     }
 
-    // Save Task
+    // Load Sample Workflow Data on Empty State
+    window.loadSampleData = async () => {
+      const samples = [
+        { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", dueMinutes: 2 },
+        { title: "Optimize Firestore Indexes", description: "Add composite index for task querying", priority: "Medium", dueMinutes: 10 },
+        { title: "Deploy Webhook Microservice", description: "Push container build to production environment", priority: "Low", dueMinutes: 25 }
+      ];
+
+      for (const item of samples) {
+        const dueTime = new Date(Date.now() + item.dueMinutes * 60000);
+        const now = new Date();
+        await addDoc(collection(db, "tasks"), {
+          title: item.title,
+          description: item.description,
+          priority: item.priority,
+          status: "Pending",
+          created_at: now.toISOString().replace('T', ' ').substring(0, 19),
+          due_at: dueTime.toISOString().replace('T', ' ').substring(0, 19),
+          due_timestamp: Math.floor(dueTime.getTime() / 1000)
+        });
+      }
+    };
+
+    // Save Task (Add or Edit)
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -464,7 +499,7 @@
       }
     };
 
-    // Open Edit Form
+    // Open Edit Task Form
     window.editTask = (id) => {
       const task = tasksCache.find(t => t.id === id);
       if (!task) return;
@@ -480,7 +515,7 @@
       toggleBtn.innerText = '✕ Close Form';
     };
 
-    // Ticking Countdown Timers
+    // Ticking Countdown Timers with Critical Escalation Visuals
     function updateTimers() {
       const now = Math.floor(Date.now() / 1000);
       tasksCache.forEach(task => {
@@ -490,7 +525,12 @@
         const diff = task.due_timestamp - now;
         if (diff <= 0) {
           timerEl.className = "timer-badge overdue";
-          timerEl.innerHTML = "⏳ Deadline Expired / Triggered";
+          timerEl.innerHTML = "🚨 <strong>CRITICAL OVERDUE:</strong> Deadline Triggered!";
+        } else if (diff <= 180) { // Less than 3 minutes remaining
+          const mins = Math.floor(diff / 60);
+          const secs = diff % 60;
+          timerEl.className = "timer-badge urgent";
+          timerEl.innerHTML = `⚠️ <strong>URGENT:</strong> ${mins}m ${secs < 10 ? '0' : ''}${secs}s remaining`;
         } else {
           const mins = Math.floor(diff / 60);
           const secs = diff % 60;
@@ -502,13 +542,19 @@
 
     setInterval(updateTimers, 1000);
 
-    // Real-time Firestore Stream
+    // Real-time Firestore Task Listener
     onSnapshot(collection(db, "tasks"), (snapshot) => {
       container.innerHTML = "";
       tasksCache = [];
 
       if (snapshot.empty) {
-        container.innerHTML = `<div class="card"><p style="color: var(--muted);">No active tasks scheduled.</p></div>`;
+        container.innerHTML = `
+          <div class="empty-state-card">
+            <h3 style="color:#fff; margin-top:0;">🚀 Task Engine Pipeline Clear</h3>
+            <p style="color:var(--muted); font-size:14px; margin-bottom:20px;">No active tasks scheduled in Firestore. Get started by adding a custom task or loading sample data.</p>
+            <button class="btn-primary" onclick="loadSampleData()">+ Load Sample Workflow Data</button>
+          </div>
+        `;
         return;
       }
 

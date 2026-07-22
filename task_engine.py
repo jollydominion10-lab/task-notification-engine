@@ -24,21 +24,27 @@ except Exception as e:
     print(f"❌ Connection Error: {e}")
     sys.exit()
 
-# Optional: Discord/Slack webhook URL
+# Optional: Add a Discord or Slack Webhook URL here
 DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE" 
 
-def create_task(title, description, priority, due_in_minutes=5):
-    """Creates a new task with a calculated due time."""
+def create_task_if_not_exists(title, description, priority, due_in_minutes=5):
+    """Creates a task only if a pending task with the exact same title doesn't exist."""
+    existing_tasks = db.collection("tasks").where("title", "==", title).where("status", "==", "Pending").get()
+    
+    if len(existing_tasks) > 0:
+        print(f"⚠️ Duplicate Task Prevented: '{title}' already exists in Pending status.")
+        return None
+
     due_time = datetime.now() + timedelta(minutes=due_in_minutes)
     
     task_data = {
         "title": title,
         "description": description,
-        "priority": priority,
-        "status": "Pending",
+        "priority": priority,  # High, Medium, Low
+        "status": "Pending",   # Pending, Completed, Notified
         "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "due_at": due_time.strftime("%Y-%m-%d %H:%M:%S"),
-        "due_timestamp": due_time.timestamp()
+        "due_timestamp": int(due_time.timestamp())
     }
     
     doc_ref = db.collection("tasks").add(task_data)
@@ -60,7 +66,7 @@ def send_webhook_notification(task):
             print(f"   ❌ Failed to deliver webhook: {e}")
 
 def check_and_notify_due_tasks():
-    """Background monitoring logic checking upcoming or overdue tasks."""
+    """Background monitoring engine that audits upcoming or overdue tasks."""
     print("\n🕵️ Running Task Deadline Monitor...")
     current_time = datetime.now().timestamp()
     
@@ -84,9 +90,9 @@ def check_and_notify_due_tasks():
         print("   ✓ All tasks are up to date. No pending deadlines found.")
 
 if __name__ == "__main__":
-    print("\n--- 1. Creating Scheduled Sample Tasks ---")
-    create_task("Backend API Code Review", "Review task endpoints and payloads", "High", due_in_minutes=0)
-    create_task("Update Database Schema", "Add index fields to Firestore tasks", "Medium", due_in_minutes=15)
+    print("\n--- 1. Creating Scheduled Tasks (With Deduplication Check) ---")
+    create_task_if_not_exists("Backend API Code Review", "Review pull requests for authentication endpoints", "High", due_in_minutes=0)
+    create_task_if_not_exists("Update Database Schema", "Add index fields to Firestore tasks", "Medium", due_in_minutes=15)
 
     time.sleep(1)
 
