@@ -7,16 +7,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #030712;
-      --card-bg: #111827;
-      --border: rgba(255, 255, 255, 0.08);
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-inner: #0f172a;
+      --border: rgba(255, 255, 255, 0.12);
       --accent: #38bdf8;
-      --accent-hover: #0284c7;
-      --text: #f9fafb;
-      --muted: #9ca3af;
-      --danger: #ef4444;
+      --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --danger: #f43f5e;
       --success: #10b981;
       --warning: #f59e0b;
+      --purple: #8b5cf6;
     }
 
     body {
@@ -26,9 +28,11 @@
       padding: 0;
       margin: 0;
       min-height: 100vh;
+      background-image: radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.15) 0%, transparent 40%);
     }
 
-    /* WELCOME SCREEN STYLES */
+    /* WELCOME ONBOARDING SCREEN STYLES */
     #welcome-screen {
       display: flex;
       flex-direction: column;
@@ -36,49 +40,53 @@
       justify-content: center;
       text-align: center;
       padding: 50px 20px;
-      max-width: 750px;
+      max-width: 780px;
       margin: 0 auto;
       min-height: 85vh;
     }
 
     .badge {
-      background: rgba(56, 189, 248, 0.1);
-      color: var(--accent);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.2);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      padding: 6px 16px;
       border-radius: 20px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.8px;
       margin-bottom: 20px;
     }
 
     .hero-title {
-      font-size: 38px;
+      font-size: 42px;
       font-weight: 800;
-      line-height: 1.25;
-      margin-bottom: 14px;
-      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .hero-subtitle {
-      font-size: 15px;
+      font-size: 16px;
       color: var(--muted);
-      max-width: 580px;
+      max-width: 600px;
       line-height: 1.6;
       margin-bottom: 30px;
     }
 
     .welcome-card {
-      background: var(--card-bg);
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 20px;
+      padding: 28px;
       width: 100%;
       box-sizing: border-box;
       margin-bottom: 24px;
       text-align: left;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
 
     .features-grid {
@@ -91,9 +99,9 @@
     }
 
     .feature-card {
-      background: #0b0f19;
+      background: var(--card-inner);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 16px;
     }
 
@@ -111,29 +119,29 @@
     }
 
     .btn-launch {
-      background: var(--accent);
-      color: #000;
+      background: var(--accent-gradient);
+      color: #fff;
       font-weight: 800;
-      font-size: 15px;
+      font-size: 16px;
       padding: 14px 28px;
       border-radius: 12px;
       border: none;
       cursor: pointer;
       width: 100%;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.2);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
     }
 
     .btn-launch:hover {
-      background: var(--accent-hover);
-      color: #fff;
+      opacity: 0.95;
+      transform: translateY(-2px);
     }
 
-    /* DASHBOARD APP STYLES */
+    /* MAIN DASHBOARD STYLES */
     #dashboard-screen {
       display: none;
       padding: 24px;
-      max-width: 1000px;
+      max-width: 1050px;
       margin: 0 auto;
     }
 
@@ -148,22 +156,80 @@
       gap: 12px;
     }
 
-    h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0; }
+    h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0; }
 
     .btn-primary {
-      background-color: var(--accent);
-      color: #000;
+      background: var(--accent-gradient);
+      color: #fff;
       font-weight: 700;
       border: none;
-      padding: 10px 18px;
+      padding: 10px 20px;
       border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
       transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
 
-    .btn-primary:hover { background-color: var(--accent-hover); color: #fff; }
+    .btn-primary:hover { opacity: 0.9; }
 
+    /* STATS & PROGRESS TRACKER BAR */
+    .progress-section {
+      background: rgba(30, 41, 59, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stats-title { font-size: 14px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stats-value { font-size: 14px; font-weight: 800; color: var(--accent); }
+
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      height: 14px;
+      width: 100%;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .progress-bar-fill {
+      background: var(--accent-gradient);
+      height: 100%;
+      width: 0%;
+      border-radius: 12px;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .metric-box {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .metric-number { font-size: 20px; font-weight: 800; color: #fff; }
+    .metric-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+
+    /* FORM & GRID STYLES */
     .form-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border);
@@ -178,7 +244,7 @@
     
     input, textarea, select {
       width: 100%;
-      background: #0b0f19;
+      background: var(--card-inner);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 10px 12px;
@@ -188,7 +254,7 @@
       font-size: 14px;
     }
 
-    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--purple); }
 
     .grid {
       display: grid;
@@ -204,7 +270,10 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      transition: transform 0.2s ease;
     }
+
+    .card:hover { transform: translateY(-2px); }
 
     .empty-state-card {
       grid-column: 1 / -1;
@@ -223,7 +292,7 @@
       border: 1px solid var(--border);
       padding: 8px 12px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       color: var(--accent);
       margin-bottom: 14px;
@@ -240,25 +309,32 @@
 
     .timer-badge.overdue {
       color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.3);
-      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(244, 63, 94, 0.3);
+      background: rgba(244, 63, 94, 0.1);
     }
 
-    .card-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .timer-badge.completed-badge {
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .card-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 
     .btn-action {
       flex: 1;
       padding: 8px;
       border-radius: 8px;
       border: 1px solid var(--border);
-      background: #0b0f19;
+      background: var(--card-inner);
       color: var(--text);
       font-weight: 600;
-      font-size: 12px;
+      font-size: 11.5px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
+    .btn-action.complete:hover { border-color: var(--success); color: var(--success); }
     .btn-action.edit:hover { border-color: var(--accent); color: var(--accent); }
     .btn-action.delete:hover { border-color: var(--danger); color: var(--danger); }
 
@@ -271,12 +347,12 @@
       text-transform: uppercase;
     }
     
-    .high { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-    .medium { background: rgba(245, 158, 11, 0.15); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
-    .low { background: rgba(56, 189, 248, 0.15); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.3); }
+    .high { background: rgba(244, 63, 94, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.4); }
+    .medium { background: rgba(245, 158, 11, 0.2); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .low { background: rgba(56, 189, 248, 0.2); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.4); }
     
     .status-pending { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
-    .status-notified { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .status-completed { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); }
   </style>
 </head>
 <body>
@@ -296,8 +372,8 @@
 
       <div class="features-grid">
         <div class="feature-card">
-          <h4>⏱️ Live Countdowns</h4>
-          <p>Ticking timers calculated directly from cloud document timestamps.</p>
+          <h4>⏱️ Live Countdowns & Stats</h4>
+          <p>Real-time completion tracking with ticking deadline countdowns.</p>
         </div>
         <div class="feature-card">
           <h4>🐍 Background Engine</h4>
@@ -318,12 +394,40 @@
   <div id="dashboard-screen">
     <div class="header">
       <div>
-        <h1>⏱️ Task Engine & Live Countdown</h1>
+        <h1>⏱️ Task Engine & Live Progress</h1>
         <p style="color: var(--muted); margin: 4px 0 0 0; font-size: 13px;" id="welcome-banner">Welcome to the active task stream.</p>
       </div>
       <div style="display: flex; gap: 10px;">
         <button class="btn-action" id="back-to-welcome-btn">← Project Overview</button>
         <button class="btn-primary" id="toggle-form-btn">+ Schedule Task</button>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="stats-header">
+        <span class="stats-title">📊 Overall Task Completion Goal</span>
+        <span class="stats-value" id="progress-percent">0% Completed</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <div class="metric-number" id="metric-total">0</div>
+          <div class="metric-label">Total Tasks</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-number" style="color: var(--success);" id="metric-completed">0</div>
+          <div class="metric-label">Completed</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-number" style="color: var(--accent);" id="metric-pending">0</div>
+          <div class="metric-label">Pending</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-number" style="color: var(--danger);" id="metric-overdue">0</div>
+          <div class="metric-label">Overdue</div>
+        </div>
       </div>
     </div>
 
@@ -402,8 +506,7 @@
     onboardingForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const visitorName = visitorInput.value.trim() || 'Guest';
-      welcomeBanner.innerText = `Logged in as: ${visitorName} | Real-time Task Monitor`;
-      
+      welcomeBanner.innerText = `Logged in as: ${visitorName} | Real-time Task Stream`;
       welcomeScreen.style.display = 'none';
       dashboardScreen.style.display = 'block';
     });
@@ -413,7 +516,7 @@
       welcomeScreen.style.display = 'flex';
     });
 
-    // Toggle Form Visibility
+    // Toggle Form
     toggleBtn.addEventListener('click', () => {
       resetForm();
       const isVisible = formContainer.style.display === 'block';
@@ -428,7 +531,7 @@
       saveBtn.innerText = "Save Task to Cloud";
     }
 
-    // Load Sample Workflow Data on Empty State
+    // Load Sample Workflow Data
     window.loadSampleData = async () => {
       const samples = [
         { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", dueMinutes: 2 },
@@ -488,6 +591,16 @@
       }
     });
 
+    // Mark Task Complete
+    window.toggleComplete = async (id, currentStatus) => {
+      const newStatus = currentStatus === 'Completed' ? 'Pending' : 'Completed';
+      try {
+        await updateDoc(doc(db, "tasks", id), { status: newStatus });
+      } catch (err) {
+        alert("Error updating task status: " + err.message);
+      }
+    };
+
     // Delete Task
     window.deleteTask = async (id) => {
       if (confirm("Are you sure you want to remove this schedule?")) {
@@ -499,7 +612,7 @@
       }
     };
 
-    // Open Edit Task Form
+    // Open Edit Form
     window.editTask = (id) => {
       const task = tasksCache.find(t => t.id === id);
       if (!task) return;
@@ -515,18 +628,52 @@
       toggleBtn.innerText = '✕ Close Form';
     };
 
-    // Ticking Countdown Timers with Critical Escalation Visuals
+    // Calculate Progress & Update Progress Bar Metrics
+    function updateProgressMetrics() {
+      const total = tasksCache.length;
+      if (total === 0) {
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('progress-percent').innerText = '0% Completed';
+        document.getElementById('metric-total').innerText = '0';
+        document.getElementById('metric-completed').innerText = '0';
+        document.getElementById('metric-pending').innerText = '0';
+        document.getElementById('metric-overdue').innerText = '0';
+        return;
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      const completed = tasksCache.filter(t => t.status === 'Completed').length;
+      const pending = tasksCache.filter(t => t.status === 'Pending').length;
+      const overdue = tasksCache.filter(t => t.status !== 'Completed' && t.due_timestamp <= now).length;
+
+      const percent = Math.round((completed / total) * 100);
+
+      document.getElementById('progress-fill').style.width = `${percent}%`;
+      document.getElementById('progress-percent').innerText = `${percent}% Completed`;
+      document.getElementById('metric-total').innerText = total;
+      document.getElementById('metric-completed').innerText = completed;
+      document.getElementById('metric-pending').innerText = pending;
+      document.getElementById('metric-overdue').innerText = overdue;
+    }
+
+    // Ticking Countdown Timers
     function updateTimers() {
       const now = Math.floor(Date.now() / 1000);
       tasksCache.forEach(task => {
         const timerEl = document.getElementById(`timer-${task.id}`);
         if (!timerEl) return;
 
+        if (task.status === 'Completed') {
+          timerEl.className = "timer-badge completed-badge";
+          timerEl.innerHTML = "✅ Task Successfully Completed";
+          return;
+        }
+
         const diff = task.due_timestamp - now;
         if (diff <= 0) {
           timerEl.className = "timer-badge overdue";
           timerEl.innerHTML = "🚨 <strong>CRITICAL OVERDUE:</strong> Deadline Triggered!";
-        } else if (diff <= 180) { // Less than 3 minutes remaining
+        } else if (diff <= 180) {
           const mins = Math.floor(diff / 60);
           const secs = diff % 60;
           timerEl.className = "timer-badge urgent";
@@ -538,11 +685,13 @@
           timerEl.innerHTML = `⏱️ Time Left: ${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
         }
       });
+
+      updateProgressMetrics();
     }
 
     setInterval(updateTimers, 1000);
 
-    // Real-time Firestore Task Listener
+    // Real-time Firestore Task Stream
     onSnapshot(collection(db, "tasks"), (snapshot) => {
       container.innerHTML = "";
       tasksCache = [];
@@ -550,11 +699,12 @@
       if (snapshot.empty) {
         container.innerHTML = `
           <div class="empty-state-card">
-            <h3 style="color:#fff; margin-top:0;">🚀 Task Engine Pipeline Clear</h3>
-            <p style="color:var(--muted); font-size:14px; margin-bottom:20px;">No active tasks scheduled in Firestore. Get started by adding a custom task or loading sample data.</p>
+            <h3 style="color:#fff; margin-top:0;">🚀 Task Pipeline Clear</h3>
+            <p style="color:var(--muted); font-size:14px; margin-bottom:20px;">No active tasks scheduled in Firestore. Get started by scheduling a task or loading preset data.</p>
             <button class="btn-primary" onclick="loadSampleData()">+ Load Sample Workflow Data</button>
           </div>
         `;
+        updateProgressMetrics();
         return;
       }
 
@@ -564,21 +714,24 @@
         tasksCache.push(task);
 
         const priorityClass = (task.priority || 'Medium').toLowerCase();
-        const statusClass = (task.status || 'Pending').toLowerCase() === 'notified' ? 'status-notified' : 'status-pending';
+        const isCompleted = task.status === 'Completed';
+        const statusClass = isCompleted ? 'status-completed' : 'status-pending';
+        const statusLabel = isCompleted ? 'Completed' : (task.status || 'Pending');
 
         container.innerHTML += `
-          <div class="card">
+          <div class="card" style="${isCompleted ? 'opacity: 0.85;' : ''}">
             <div>
               <div style="display:flex; justify-content:space-between; margin-bottom: 10px;">
                 <span class="tag ${priorityClass}">${task.priority || 'Medium'}</span>
-                <span class="tag ${statusClass}">${task.status || 'Pending'}</span>
+                <span class="tag ${statusClass}">${statusLabel}</span>
               </div>
-              <div class="task-title">${task.title || 'Untitled Task'}</div>
+              <div class="task-title" style="${isCompleted ? 'text-decoration: line-through; color: var(--muted);' : ''}">${task.title || 'Untitled Task'}</div>
               <div class="task-desc">${task.description || 'No details.'}</div>
               <div class="timer-badge" id="timer-${task.id}">⏱️ Calculating time...</div>
             </div>
             
             <div class="card-actions">
+              <button class="btn-action complete" onclick="toggleComplete('${task.id}', '${task.status}')">${isCompleted ? '↩️ Undo' : '✅ Done'}</button>
               <button class="btn-action edit" onclick="editTask('${task.id}')">✏️ Edit</button>
               <button class="btn-action delete" onclick="deleteTask('${task.id}')">🗑️ Remove</button>
             </div>
