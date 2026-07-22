@@ -421,8 +421,8 @@
 
       <div class="features-grid">
         <div class="feature-card">
-          <h4>⏱️ Live Countdowns & Sound</h4>
-          <p>Real-time completion tracking with audio alarms and pop-up notifications.</p>
+          <h4>⏱️ Flexible Timers & Alarms</h4>
+          <p>Schedule by Days, Hours, or Minutes with live ticking countdowns.</p>
         </div>
         <div class="feature-card">
           <h4>🐍 Background Engine</h4>
@@ -492,20 +492,32 @@
           <label>Description</label>
           <textarea id="task-desc" rows="2" placeholder="Brief details..." required></textarea>
         </div>
-        <div style="display: flex; gap: 12px;">
-          <div class="form-group" style="flex: 1;">
-            <label>Priority</label>
-            <select id="task-priority">
-              <option value="High">High</option>
-              <option value="Medium" selected>Medium</option>
-              <option value="Low">Low</option>
-            </select>
+        
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="task-priority">
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+
+        <label>Deadline Duration</label>
+        <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+          <div style="flex: 1;">
+            <input type="number" id="task-due-days" min="0" value="0" placeholder="Days">
+            <span style="font-size: 11px; color: var(--muted); font-weight: 700;">DAYS</span>
           </div>
-          <div class="form-group" style="flex: 1;">
-            <label>Due In (Minutes)</label>
-            <input type="number" id="task-due-min" min="1" value="5" required>
+          <div style="flex: 1;">
+            <input type="number" id="task-due-hours" min="0" value="0" placeholder="Hours">
+            <span style="font-size: 11px; color: var(--muted); font-weight: 700;">HOURS</span>
+          </div>
+          <div style="flex: 1;">
+            <input type="number" id="task-due-min" min="0" value="5" placeholder="Mins">
+            <span style="font-size: 11px; color: var(--muted); font-weight: 700;">MINS</span>
           </div>
         </div>
+
         <button type="submit" class="btn-primary" style="width: 100%; margin-top: 6px;" id="save-btn">Save Task to Cloud</button>
       </form>
     </div>
@@ -650,17 +662,21 @@
       editTaskId.value = "";
       formTitle.innerText = "📌 Schedule New Task";
       saveBtn.innerText = "Save Task to Cloud";
+      document.getElementById('task-due-days').value = "0";
+      document.getElementById('task-due-hours').value = "0";
+      document.getElementById('task-due-min').value = "5";
     }
 
     window.loadSampleData = async () => {
       const samples = [
-        { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", dueMinutes: 1 },
-        { title: "Optimize Firestore Indexes", description: "Add composite index for task querying", priority: "Medium", dueMinutes: 5 },
-        { title: "Deploy Webhook Microservice", description: "Push container build to production environment", priority: "Low", dueMinutes: 15 }
+        { title: "Review Pull Request #42", description: "Audit security parameters and route guards", priority: "High", days: 0, hours: 0, mins: 1 },
+        { title: "System Architecture Audit", description: "Review microservice logs and indexes", priority: "Medium", days: 1, hours: 4, mins: 0 },
+        { title: "Deploy Webhook Microservice", description: "Push container build to production", priority: "Low", days: 3, hours: 0, mins: 0 }
       ];
 
       for (const item of samples) {
-        const dueTime = new Date(Date.now() + item.dueMinutes * 60000);
+        const totalMinutes = (item.days * 1440) + (item.hours * 60) + item.mins;
+        const dueTime = new Date(Date.now() + totalMinutes * 60000);
         const now = new Date();
         await addDoc(collection(db, "tasks"), {
           title: item.title,
@@ -674,6 +690,7 @@
       }
     };
 
+    // SAVE TASK (DAYS + HOURS + MINS CALCULATION)
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       initAudioEngine();
@@ -681,9 +698,19 @@
       const title = document.getElementById('task-title').value;
       const description = document.getElementById('task-desc').value;
       const priority = document.getElementById('task-priority').value;
-      const dueMinutes = parseInt(document.getElementById('task-due-min').value) || 5;
+      
+      const dueDays = parseInt(document.getElementById('task-due-days').value) || 0;
+      const dueHours = parseInt(document.getElementById('task-due-hours').value) || 0;
+      const dueMins = parseInt(document.getElementById('task-due-min').value) || 0;
 
-      const dueTime = new Date(Date.now() + dueMinutes * 60000);
+      const totalMinutes = (dueDays * 1440) + (dueHours * 60) + dueMins;
+      
+      if (totalMinutes <= 0) {
+        alert("Please specify a deadline duration (at least 1 minute).");
+        return;
+      }
+
+      const dueTime = new Date(Date.now() + totalMinutes * 60000);
       const now = new Date();
 
       const taskPayload = {
@@ -772,6 +799,7 @@
       document.getElementById('metric-overdue').innerText = overdue;
     }
 
+    // TICKING TIMER WITH DAYS, HOURS, MINUTES & SECONDS
     function updateTimers() {
       const now = Math.floor(Date.now() / 1000);
       tasksCache.forEach(task => {
@@ -791,16 +819,25 @@
           
           triggerDeadlineAlert(task);
 
-        } else if (diff <= 180) {
-          const mins = Math.floor(diff / 60);
-          const secs = diff % 60;
-          timerEl.className = "timer-badge urgent";
-          timerEl.innerHTML = `⚠️ <strong>URGENT:</strong> ${mins}m ${secs < 10 ? '0' : ''}${secs}s remaining`;
         } else {
-          const mins = Math.floor(diff / 60);
+          // Calculate Days, Hours, Minutes, Seconds
+          const days = Math.floor(diff / (3600 * 24));
+          const hours = Math.floor((diff % (3600 * 24)) / 3600);
+          const mins = Math.floor((diff % 3600) / 60);
           const secs = diff % 60;
-          timerEl.className = "timer-badge";
-          timerEl.innerHTML = `⏱️ Time Left: ${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+
+          let timeString = "";
+          if (days > 0) timeString += `${days}d `;
+          if (hours > 0 || days > 0) timeString += `${hours}h `;
+          timeString += `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+
+          if (diff <= 180) { // Under 3 mins
+            timerEl.className = "timer-badge urgent";
+            timerEl.innerHTML = `⚠️ <strong>URGENT:</strong> ${timeString} remaining`;
+          } else {
+            timerEl.className = "timer-badge";
+            timerEl.innerHTML = `⏱️ Time Left: ${timeString}`;
+          }
         }
       });
 
