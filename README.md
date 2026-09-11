@@ -1,36 +1,28 @@
-# ⏱️ Task Notification Engine & Real-Time Dashboard
+# Task Notification Engine
 
-A full-stack, microservice-architected task scheduling and deadline monitoring platform. The system combines an asynchronous Python background polling engine with a real-time JavaScript web dashboard to track task lifetimes, execute deduplication guards, and trigger multi-channel alerts upon deadline expiration.
+A task dashboard with deadlines and alerts.
 
----
+This is a software project. The live demo is a web dashboard.
+The Python file can create tasks in Firestore and send webhook alerts when a task is due.
 
-## 🌟 Key Features
+Live demo: https://jollydominion10-lab.github.io/task-notification-engine/
 
-* **⏱️ Flexible Multi-Day Countdowns:** Schedule tasks down to Days, Hours, and Minutes with real-time ticking UI updates.
-* **🚨 Multi-Channel Alert System:** Fires Web Audio API alarm sounds, browser system notifications, and modal pop-ups the moment deadlines hit zero.
-* **📊 Progress & Goal Tracking:** Interactive completion metrics and progress bars synchronized live across sessions.
-* **🛡️ Backend Deduplication Guards:** Python service prevents redundant task creation by auditing database state before insertion.
-* **⚡ Real-Time Cloud Sync:** Built on Cloud Firestore listeners (`onSnapshot`) for instant sub-second dashboard updates.
-* **👋 Interactive Onboarding:** Clean welcome screen explaining the microservice architecture before granting app access.
+## What it does
+- Lets you add tasks with a countdown
+- Shows progress in the dashboard
+- Can play an alert when a deadline is reached
+- Includes a Python helper in `task_engine.py` that checks due tasks
 
----
+## Tech
+- HTML, CSS, JavaScript
+- Python
+- Firebase / Firestore
+- Optional Discord webhook
 
-## 📐 System Architecture
+## How to run the dashboard
+Open the live demo, or open `index.html` in a browser.
 
-```text
-  ┌──────────────────────┐          ┌─────────────────────────┐
-  │   User Interface     │          │   Python Engine Service │
-  │ (HTML5/ES6 Dashboard)│          │  (Polling & Validation) │
-  └──────────┬───────────┘          └────────────┬────────────┘
-             │                                   │
-             │ Real-time Stream                  │ Admin SDK Check
-             ▼                                   ▼
-  ┌───────────────────────────────────────────────────────────┐
-  │               Google Cloud Firestore DB                   │
-  └──────────────────────────────┬────────────────────────────┘
-                                 │
-                                 │ Overdue Deadline Trigger
-                                 ▼
-                    ┌──────────────────────────┐
-                    │ Webhooks / Audio Alarms  │
-                    └──────────────────────────┘
+## How to run the Python helper
+```bash
+pip install -r requirements.txt
+python task_engine.py
